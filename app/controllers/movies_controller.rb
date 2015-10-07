@@ -18,6 +18,7 @@ class MoviesController < ApplicationController
     @movies = Movie.order(params[:sort_by])
     @movies = @movies.where(:rating => params[:ratings].keys) if params[:ratings].present?
     @sort_column = params[:sort_by]
+    @selected_ratings = (params[:ratings].present? ? params[:ratings] : [])
   end
   
   def load_ratings
