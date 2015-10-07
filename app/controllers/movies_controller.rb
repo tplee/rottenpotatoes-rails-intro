@@ -11,12 +11,19 @@ class MoviesController < ApplicationController
     @movie = Movie.find(id) # look up movie by unique ID
     # will render app/views/movies/show.<extension> by default
   end
-
+  
+  before_filter :load_ratings
+  
   def index
     @movies = Movie.order(params[:sort_by])
+    @movies = @movies.where(:rating => params[:ratings].keys) if params[:ratings].present?
     @sort_column = params[:sort_by]
   end
-
+  
+  def load_ratings
+    @all_ratings = Movie.all_ratings
+  end
+  
   def new
     # default: render 'new' template
   end
