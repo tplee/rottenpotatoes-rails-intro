@@ -12,18 +12,42 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
   
-  before_filter :load_ratings
+#  before_filter :load_ratings
   
   def index
-    @movies = Movie.order(params[:sort_by])
-    @movies = @movies.where(:rating => params[:ratings].keys) if params[:ratings].present?
-    @sort_column = params[:sort_by]
-    @selected_ratings = (params[:ratings].present? ? params[:ratings] : [])
+      @all_ratings=Movie.all_ratings
+      sort = params[:sort] || session[:sort] #get params or session
+
+      ratings = params[:ratings] #get raitings params
+      # if nil, store all ratings, else grab the keys
+      ratings = ratings.nil? ? Movie.all_ratings : ratings.keys 
+
+      @selected_ratings = params[:ratings] || session[:ratings] || {}
+      if @selected_ratings == {}
+         @selected_ratings = Hash[@all_ratings.map {|rating| [rating, rating]}]
+      end
+      
+      #compare the session to current params
+      if params[:ratings] != session[:ratings] or params[:sort] != session[:sort]
+        session[:sort] = sort #if not equal use non-nil val from above
+        session[:ratings] = @selected_ratings #grab selsected ratings
+        redirect_to :sort => sort, :ratings => @selected_ratings and return
+      end
+
+      if params[:sort].present?
+        if sort == 'title'
+          @movies = Movie.where('rating IN (?)', ratings).order('title')
+        elsif sort == 'release_date'
+          @movies = Movie.where('rating IN (?)', ratings).order('release_date')
+        end
+      else
+        @movies = Movie.where('rating IN (?)', ratings)
+      end
   end
   
-  def load_ratings
-    @all_ratings = Movie.all_ratings
-  end
+#  def load_ratings
+#    
+#  end
   
   def new
     # default: render 'new' template
